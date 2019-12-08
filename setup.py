@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 
 setup(
-    name='proxy',
+    name='terminal-proxy',
     version=__version__,
     description='Proxy management tool for terminal.',
     long_description=open('README.md').read(),
