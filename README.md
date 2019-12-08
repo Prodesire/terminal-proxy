@@ -10,7 +10,7 @@ pip install terminal-proxy
 ### Config
 ```plain
 # If you are on Windows, please run as administrator
-proxy config 127.0.0.1:8080
+proxy config 127.0.0.1:1080
 ```
 
 ### Turn on
