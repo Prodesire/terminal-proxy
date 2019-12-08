@@ -1,6 +1,6 @@
 import os
 import click
-from proxy.proxy import Proxy
+from .proxy import Proxy
 
 
 proxy = Proxy.initialize()

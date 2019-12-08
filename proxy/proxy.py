@@ -8,7 +8,8 @@ from subprocess import call
 class Proxy(object):
 
     def __init__(self):
-        self.proxy_path = os.path.join(os.path.expanduser('~'), '.terminal-proxy')
+        self.proxy_path = os.path.join(
+            os.path.expanduser('~'), '.terminal-proxy')
 
     @staticmethod
     def initialize():
@@ -54,16 +55,23 @@ class WinProxy(Proxy):
 class LinuxProxy(Proxy):
 
     def on(self):
+        if os.getenv('__proxy__') == 'on':
+            return
+
         proxy_host = self.get_proxy_host()
-        call(['set', 'http_proxy={}'.format(proxy_host)])
-        call(['set', 'https_proxy={}'.format(proxy_host)])
+        proxy = 'http://{}'.format(proxy_host)
+        os.environ['http_proxy'] = proxy
+        os.environ['https_proxy'] = proxy
+        os.environ['__proxy__'] = 'on'
+        shell = os.getenv('SHELL', 'sh')
+        call(shell)
 
     def show(self):
-        http_proxy = os.getenv('http_proxy')
-        https_proxy = os.getenv('https_proxy')
+        http_proxy = os.getenv('http_proxy', '')
+        https_proxy = os.getenv('https_proxy', '')
         click.echo('http_proxy={}'.format(http_proxy))
         click.echo('https_proxy={}'.format(https_proxy))
 
     def off(self):
-        call(['set', 'http_proxy='])
-        call(['set', 'https_proxy='])
+        if os.getenv('__proxy__') == 'on':
+            click.echo('Please run "exit"')

@@ -16,7 +16,7 @@ setup(
     ],
     packages=find_packages(),
     entry_points={
-        'console_scripts': ['proxy=proxy.cli:cli']
+        'console_scripts': ['proxy=proxy.__main__:cli']
     },
     classifiers=[
         'Operating System :: OS Independent',
