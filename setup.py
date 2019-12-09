@@ -6,6 +6,7 @@ setup(
     name='terminal-proxy',
     version=__version__,
     description='Proxy management tool for terminal.',
+    long_description_content_type='text/markdown',
     long_description=open('README.md').read(),
     author='Prodesire',
     author_email='wangbinxin001@126.com',
