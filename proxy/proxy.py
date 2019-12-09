@@ -63,20 +63,23 @@ class HttpProxy(BaseProxy):
 
 class WinProxy(HttpProxy):
 
-    def config(self, proxy_host):
+    @staticmethod
+    def check_admin():
         if ctypes.windll.shell32.IsUserAnAdmin() == 0:
-            click.echo('Run as administrator please.')
+            click.echo('Please run as administrator.')
             sys.exit(2)
-        super(WinProxy, self).config(proxy_host)
 
     def on(self):
+        self.check_admin()
         proxy_host = self.get_proxy_host()
         run('netsh winhttp set proxy {}'.format(proxy_host))
 
     def show(self):
+        click.secho('[HTTP Proxy]', fg='green')
         run('netsh winhttp show proxy')
 
     def off(self):
+        self.check_admin()
         run('netsh winhttp reset proxy')
 
 

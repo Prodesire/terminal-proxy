@@ -8,7 +8,7 @@ def getoutput(cmd):
         data = ex.output
     if data[-1:] == '\n':
         data = data[:-1]
-    return data
+    return data.decode('utf-8')
 
 
 def run(cmd):
