@@ -1,26 +1,25 @@
 import os
 import sys
+import json
 import click
 import ctypes
-from subprocess import call
+from subprocess import Popen
+
+from .utils import getoutput, run
 
 
-class Proxy(object):
+class BaseProxy(object):
 
     def __init__(self):
         self.proxy_path = os.path.join(
             os.path.expanduser('~'), '.terminal-proxy')
 
-    @staticmethod
-    def initialize():
-        if os.name == 'nt':
-            return WinProxy()
-        else:
-            return LinuxProxy()
-
     def config(self, proxy_host):
         with open(self.proxy_path, 'w') as f:
-            f.write(proxy_host)
+            data = {
+                'proxy_host': proxy_host
+            }
+            f.write(json.dumps(data))
 
     def check(self):
         if not os.path.exists(self.proxy_path):
@@ -30,10 +29,39 @@ class Proxy(object):
     def get_proxy_host(self):
         self.check()
         with open(self.proxy_path) as f:
-            return f.read()
+            content = f.read()
+            data = json.loads(content)
+            return data['proxy_host']
+
+    def set_pid(self, pid):
+        self.check()
+        with open(self.proxy_path) as f:
+            content = f.read()
+            data = json.loads(content)
+            data['pid'] = pid
+
+        with open(self.proxy_path, 'w') as f:
+            f.write(json.dumps(data))
+
+    def get_pid(self):
+        self.check()
+        with open(self.proxy_path) as f:
+            content = f.read()
+            data = json.loads(content)
+            return data['pid']
 
 
-class WinProxy(Proxy):
+class HttpProxy(BaseProxy):
+
+    @staticmethod
+    def initialize():
+        if os.name == 'nt':
+            return WinProxy()
+        else:
+            return LinuxProxy()
+
+
+class WinProxy(HttpProxy):
 
     def config(self, proxy_host):
         if ctypes.windll.shell32.IsUserAnAdmin() == 0:
@@ -43,16 +71,16 @@ class WinProxy(Proxy):
 
     def on(self):
         proxy_host = self.get_proxy_host()
-        call(['netsh', 'winhttp', 'set', 'proxy', proxy_host])
+        run('netsh winhttp set proxy {}'.format(proxy_host))
 
     def show(self):
-        call(['netsh', 'winhttp', 'show', 'proxy'])
+        run('netsh winhttp show proxy')
 
     def off(self):
-        call(['netsh', 'winhttp', 'reset', 'proxy'])
+        run('netsh winhttp reset proxy')
 
 
-class LinuxProxy(Proxy):
+class LinuxProxy(HttpProxy):
 
     def on(self):
         if os.getenv('__proxy__') == 'on':
@@ -64,14 +92,41 @@ class LinuxProxy(Proxy):
         os.environ['https_proxy'] = proxy
         os.environ['__proxy__'] = 'on'
         shell = os.getenv('SHELL', 'sh')
-        call(shell)
+        p = Popen(shell)
+        self.set_pid(p.pid)
+        p.wait()
 
     def show(self):
         http_proxy = os.getenv('http_proxy', '')
         https_proxy = os.getenv('https_proxy', '')
+        click.secho('[HTTP Proxy]', fg='green')
         click.echo('http_proxy={}'.format(http_proxy))
         click.echo('https_proxy={}'.format(https_proxy))
 
     def off(self):
         if os.getenv('__proxy__') == 'on':
-            click.echo('Please run "exit"')
+            pid = self.get_pid()
+            os.kill(pid, 9)
+
+
+class GitProxy(BaseProxy):
+
+    @staticmethod
+    def initialize():
+        return GitProxy()
+
+    def on(self):
+        proxy_host = self.get_proxy_host()
+        run('git config --global http.proxy {}'.format(proxy_host))
+        run('git config --global https.proxy {}'.format(proxy_host))
+
+    def show(self):
+        http_proxy = getoutput('git config --global --get http.proxy')
+        https_proxy = getoutput('git config --global --get https.proxy')
+        click.secho('[Git Proxy]', fg='green')
+        click.echo('http_proxy={}'.format(http_proxy))
+        click.echo('https_proxy={}'.format(https_proxy))
+
+    def off(self):
+        run('git config --global --unset http.proxy')
+        run('git config --global --unset https.proxy')
