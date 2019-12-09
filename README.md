@@ -2,28 +2,37 @@
 Proxy management tool for terminal.
 
 ## Install
-```plain
+```bash
 pip install terminal-proxy
 ```
 
 ## Usage
 ### Config
-```plain
-# If you are on Windows, please run as administrator
+```bash
 proxy config 127.0.0.1:1080
 ```
 
 ### Turn on
-```plain
+```bash
+# If you are on Windows, please run as administrator
+# Turn on all proxies
 proxy on
+
+# Turn on http proxy
+proxy on --http
+
+# Turn on git proxy
+proxy on --git
 ```
 
 ### Show
-```plain
+```bash
+# Show all proxies. Also supports --http and --git
 proxy show
 ```
 
 ### Turn off
-```plain
+```bash
+# Turn off all proxies. Also supports --http and --git
 proxy off
 ```
